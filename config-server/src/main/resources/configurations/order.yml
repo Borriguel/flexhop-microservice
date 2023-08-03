@@ -1,0 +1,57 @@
+server:
+  port: 8083
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/order-service-db
+    username: admin
+    password: admin
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+feign:
+  circuitbreaker:
+    enabled: true
+resilience4j:
+  circuitbreaker:
+    instances:
+      order:
+        registerHealthIndicator: true
+        eventConsumerBufferSize: 10
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 5
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 5s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        slidingWindowType: COUNT_BASED
+  retry:
+    instance:
+      order:
+        registerHealthIndicator: true
+        maxAttempts: 3
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        ignoreExceptions:
+          - io.github.resilience4j.circuitbreaker.CallNotPermittedException
+management:
+  health:
+    circuitbreakers:
+      enabled: true
+    retries:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,circuitbreakers,circuitbreakerevents,retries,retryevents
+  endpoint:
+    health:
+      show-details: always
